@@ -1,0 +1,20 @@
+Field,Type,Required,Notes
+event_id,Single line text,Yes,Unique idempotency key from funnel
+event_time,Date/time,Yes,Client event timestamp
+first_name,Single line text,Yes,Lead first name
+last_name,Single line text,No,Lead last name
+email,Email,Yes,Lead email
+phone,Phone,Yes,Lead phone
+age,Single select,No,Qualification answer
+work_status,Single select,No,Qualification answer
+condition,Single select,No,Qualification answer
+duration,Single select,No,Qualification answer
+applied,Single select,No,Qualification answer
+representation,Single select,No,Qualification answer
+fbp,Single line text,No,Meta browser identifier
+fbc,Single line text,No,Meta click identifier
+source,Single line text,No,UTM source
+campaign,Single line text,No,UTM campaign
+page_url,URL,No,Landing page URL
+received_at,Date/time,Yes,Automation receipt timestamp
+status,Single select,Yes,new|processed|failed
