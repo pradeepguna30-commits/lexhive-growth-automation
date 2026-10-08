@@ -1,0 +1,144 @@
+{
+  "name": "LexHive — Lead Intake → Airtable",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lexhive-lead",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook",
+      "name": "Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "lexhive-lead"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b = $json.body ?? $json;\nreturn [{ json: {\n  event_id: b.event_id,\n  event_time: b.event_time,\n  first_name: b.lead?.first_name ?? '',\n  last_name: b.lead?.last_name ?? '',\n  email: b.lead?.email ?? '',\n  phone: b.lead?.phone ?? '',\n  age: b.answers?.age ?? '',\n  work_status: b.answers?.work_status ?? '',\n  condition: b.answers?.condition ?? '',\n  duration: b.answers?.duration ?? '',\n  applied: b.answers?.applied ?? '',\n  representation: b.answers?.representation ?? '',\n  fbp: b.attribution?.fbp ?? '',\n  fbc: b.attribution?.fbc ?? '',\n  source: b.attribution?.utm_source ?? '',\n  campaign: b.attribution?.utm_campaign ?? '',\n  page_url: b.page_url ?? '',\n  received_at: new Date().toISOString(),\n  status: 'new'\n} }];"
+      },
+      "id": "normalize",
+      "name": "Normalize + Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-email",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "has-phone",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "valid",
+      "name": "Valid Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "baseId": "APP_AIRTABLE_BASE_ID",
+        "tableId": "tblLeads",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_id": "={{ $json.event_id }}",
+            "event_time": "={{ $json.event_time }}",
+            "first_name": "={{ $json.first_name }}",
+            "last_name": "={{ $json.last_name }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "age": "={{ $json.age }}",
+            "work_status": "={{ $json.work_status }}",
+            "condition": "={{ $json.condition }}",
+            "duration": "={{ $json.duration }}",
+            "applied": "={{ $json.applied }}",
+            "representation": "={{ $json.representation }}",
+            "fbp": "={{ $json.fbp }}",
+            "fbc": "={{ $json.fbc }}",
+            "source": "={{ $json.source }}",
+            "campaign": "={{ $json.campaign }}",
+            "page_url": "={{ $json.page_url }}",
+            "received_at": "={{ $json.received_at }}",
+            "status": "={{ $json.status }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "airtable",
+      "name": "Create Lead in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [280, -80]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "baseId": "APP_AIRTABLE_BASE_ID",
+        "tableId": "tblErrors",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "event_id": "={{ $json.event_id }}",
+            "error_type": "validation",
+            "payload": "={{ JSON.stringify($json) }}",
+            "created_at": "={{ $now }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "errors",
+      "name": "Log Invalid Lead",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [280, 120]
+    }
+  ],
+  "connections": {
+    "Lead Webhook": {
+      "main": [[{"node": "Normalize + Validate", "type": "main", "index": 0}]]
+    },
+    "Normalize + Validate": {
+      "main": [[{"node": "Valid Lead?", "type": "main", "index": 0}]]
+    },
+    "Valid Lead?": {
+      "main": [
+        [{"node": "Create Lead in Airtable", "type": "main", "index": 0}],
+        [{"node": "Log Invalid Lead", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "versionId": "lexhive-v1"
+}
