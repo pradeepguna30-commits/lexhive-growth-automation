@@ -45,7 +45,8 @@ Set these in the deployment provider's environment-variable settings. Do not com
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_META_PIXEL_ID` | Public Meta Pixel ID used by the browser Pixel (Vite exposes this value in the client bundle; it is not a secret) |\n| `META_PIXEL_ID` | Meta Pixel/data source ID for server-side Conversions API events |
+| `VITE_META_PIXEL_ID` | Public Meta Pixel ID used by the browser Pixel (Vite exposes this value in the client bundle; it is not a secret) |
+| `META_PIXEL_ID` | Meta Pixel/data source ID for server-side Conversions API events |
 | `META_ACCESS_TOKEN` | Server-only Meta Conversions API access token |
 | `N8N_WEBHOOK_URL` | Production webhook URL from the activated n8n workflow |
 
