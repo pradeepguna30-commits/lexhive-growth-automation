@@ -34,7 +34,25 @@ export default function App() {
   const progress = Math.round(((step + 1) / total) * 100);
 
   useEffect(() => {
-    trackMeta("PageView", getEventId());
+    const pixelId = import.meta.env.VITE_META_PIXEL_ID;
+    if (pixelId) {
+      if (!window.fbq) {
+        const fbq = function () {
+          if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
+          else fbq.queue.push(arguments);
+        };
+        fbq.queue = [];
+        fbq.loaded = true;
+        fbq.version = "2.0";
+        window.fbq = fbq;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://connect.facebook.net/en_US/fbevents.js";
+        document.head.appendChild(script);
+      }
+      window.fbq("init", pixelId);
+      trackMeta("PageView", getEventId());
+    }
   }, []);
 
   const current = questions[step];
@@ -42,7 +60,8 @@ export default function App() {
 
   const choose = (value) => {
     setAnswers((a) => ({ ...a, [current.id]: value }));
-    trackMeta("LeadStepCompleted", getEventId(), { step: current.id, value });
+    // Never send qualification answers (which may reveal health information) to Meta.
+    trackMeta("LeadStepCompleted", getEventId(), { step: current.id });
   };
 
   const next = () => {
