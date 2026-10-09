@@ -37,7 +37,7 @@ A GitHub Actions workflow at `.github/workflows/build.yml` runs the production b
 4. Configure the environment variables listed below in the Vercel project settings, then redeploy.
 5. Submit a test lead only after the downstream integrations have been configured.
 
-The included `vercel.json` configures `api/lead.js` as a Node.js serverless function.
+The included `vercel.json` sets the Vite build command and `dist` output directory. Vercel detects the Node.js runtime for `api/lead.js` automatically.
 
 ## Environment variables
 
@@ -45,11 +45,11 @@ Set these in the deployment provider's environment-variable settings. Do not com
 
 | Variable | Purpose |
 | --- | --- |
-| `META_PIXEL_ID` | Meta Pixel/data source ID for server-side Conversions API events |
+| `VITE_META_PIXEL_ID` | Public Meta Pixel ID used by the browser Pixel (Vite exposes this value in the client bundle; it is not a secret) |\n| `META_PIXEL_ID` | Meta Pixel/data source ID for server-side Conversions API events |
 | `META_ACCESS_TOKEN` | Server-only Meta Conversions API access token |
 | `N8N_WEBHOOK_URL` | Production webhook URL from the activated n8n workflow |
 
-If Meta credentials are missing, server-side Meta delivery is skipped. If `N8N_WEBHOOK_URL` is missing, the lead API skips that downstream post. The browser tracking helper expects the Meta Pixel script to be installed and initialized with the same Pixel ID; verify that before relying on browser events.
+Set `VITE_META_PIXEL_ID` to initialize the browser Pixel. Set `META_PIXEL_ID` and `META_ACCESS_TOKEN` for server-side Conversions API events; the browser and server use the same Lead event ID for deduplication. If Meta CAPI is unavailable, lead delivery to n8n is still attempted. The API returns a visible error if n8n is not configured or lead delivery fails after retries. Qualification answer values are not sent as Meta custom event data.
 
 ## Configure n8n and Airtable
 
@@ -62,7 +62,7 @@ If Meta credentials are missing, server-side Meta delivery is skipped. If `N8N_W
 ## Important implementation notes
 
 - The workflow JSON is a template: Airtable credentials, base/table IDs, and activation must be configured in the target accounts.
-- The Meta Pixel browser script must be installed/initialized separately; the React code's optional `window.fbq` calls alone do not load it.
+- The browser Pixel script is loaded by the React app only when `VITE_META_PIXEL_ID` is configured.
 - The example flow uses representative disability-benefits qualification questions. Replace these with the exact questions approved for the target funnel before production use.
 - This is a take-home implementation, not a claim that production services are already connected. A live deployment and end-to-end test should be reported only after you complete and verify them.
 - Never put secrets in GitHub. Use environment variables in the hosting provider and credential storage in n8n.
